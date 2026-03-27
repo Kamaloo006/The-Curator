@@ -24,7 +24,7 @@ export default function HeaderSearch() {
       key={link.label}
       to={link.link}
       className={({ isActive }) =>
-        `px-2 mt-1 text-md transition-all duration-200 border-b-2 font-bold ${
+        `px-2 mt-1 text-sm transition-all duration-200 py-1 border-b-2 font-bold ${
           isActive
             ? `text-[#1C2AC8] border-[#1C2AC8] ${
                 theme === "dark" && "text-white border-[#5866FA]"
@@ -62,7 +62,6 @@ export default function HeaderSearch() {
             </NavLink>
           ))}
 
-          {/* optional mobile actions */}
           <Button ref={ref} color={hovered ? "#3C4AE0" : "#5866FA"} radius={10}>
             Register
           </Button>
@@ -79,13 +78,13 @@ export default function HeaderSearch() {
         )}
       >
         <div className={classes.inner}>
-          {/* LEFT */}
           <Group>
             <Burger
               opened={opened}
               onClick={toggle}
               size="sm"
               hiddenFrom="sm"
+              color={theme === "dark" ? "white" : "black"}
               aria-label="Toggle navigation"
             />
 
@@ -104,9 +103,7 @@ export default function HeaderSearch() {
             </Group>
           </Group>
 
-          {/* RIGHT */}
           <Group className="flex gap-2">
-            {/* Search (hide on small screens) */}
             <Autocomplete
               placeholder="Search stories..."
               leftSection={<IconSearch size={16} stroke={1.5} />}
@@ -120,7 +117,7 @@ export default function HeaderSearch() {
                     theme === "dark"
                       ? "1px solid #3C3C3C"
                       : "1px solid #E2E8F0",
-                  color: theme === "dark" ? "#F2F0F0" : "#1B1C1C",
+                  color: theme === "dark" ? "red" : "#1B1C1C",
                   transition: "all 0.2s ease",
                   "&:focus": {
                     borderColor: theme === "dark" ? "#84CEF9" : "#1C2AC8",
@@ -131,12 +128,12 @@ export default function HeaderSearch() {
                   },
                 },
                 dropdown: {
-                  backgroundColor: theme === "dark" ? "#2C2C2C" : "white",
+                  color: theme === "dark" ? "#a0a0a0" : "#2c2c2c",
+                  backgroundColor: theme === "dark" ? "#313030" : "white",
                 },
               }}
             />
 
-            {/* Actions (hide on mobile) */}
             <Group visibleFrom="sm" className="flex gap-2">
               <Button
                 ref={ref}
