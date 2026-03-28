@@ -50,7 +50,7 @@ export default function HeaderSearch() {
         hiddenFrom="sm"
         zIndex={1000}
       >
-        <div className="flex flex-col md:gap-6 gap-2 mt-6">
+        <div className="flex flex-col md:gap-6 gap-2 mt-6 ">
           {links.map((link) => (
             <NavLink
               key={link.label}
@@ -77,7 +77,7 @@ export default function HeaderSearch() {
           },
         )}
       >
-        <div className={classes.inner}>
+        <div className={`${classes.inner}`}>
           <Group>
             <Burger
               opened={opened}

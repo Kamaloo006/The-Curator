@@ -9,7 +9,7 @@ const Hero = () => {
   const { theme } = useThemeContext();
 
   return (
-    <Container size={1232} className=" py-16 px-4 md:px-8">
+    <Container size={1232} className=" py-22.5 px-4 md:px-8">
       <div
         className={clsx(`flex flex-col-reverse md:flex-row gap-6 items-center`)}
       >
@@ -38,11 +38,11 @@ const Hero = () => {
 
           <h1
             className={clsx(
-              "font-extrabold leading-snug text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#1C1B1B]",
+              "font-extrabold leading-snug text-3xl sm:text-4xl md:text-5xl lg:text-6xl  xl:w-125.25 text-[#1C1B1B]",
               { "text-[#eee]": theme === "dark" },
             )}
           >
-            The Architecture of Quiet Spaces
+            The Architecture of Quite Spaces
           </h1>
 
           <p
