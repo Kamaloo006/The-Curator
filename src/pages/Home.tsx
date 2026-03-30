@@ -3,6 +3,7 @@ import Hero from "../components/layouts/Hero";
 import { useThemeContext } from "../context/ThemeContext";
 import clsx from "clsx";
 import HomePosts from "../components/layouts/HomePosts";
+import { Footer } from "../components/layouts/Footer";
 
 const Home = () => {
   const { theme } = useThemeContext();
@@ -16,6 +17,7 @@ const Home = () => {
       <Navbar />
       <Hero />
       <HomePosts />
+      <Footer />
     </div>
   );
 };

@@ -70,7 +70,7 @@ export default function HeaderSearch() {
 
       <header
         className={clsx(
-          `container lg:px-10 min-w-full sm:px-6 transition-all duration-200`,
+          `sticky top-0 z-50 container lg:px-10 min-w-full sm:px-6 transition-all duration-200`,
           {
             "bg-white": theme === "light",
             "bg-[#1C1B1B]": theme === "dark",

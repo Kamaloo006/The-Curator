@@ -1,6 +1,5 @@
 import { Avatar, Badge, Card, Group, Image } from "@mantine/core";
 import { useThemeContext } from "../../context/ThemeContext";
-import cardImg from "../../assets/cardImg.png";
 import type { Post } from "../../types/Post";
 import clsx from "clsx";
 
