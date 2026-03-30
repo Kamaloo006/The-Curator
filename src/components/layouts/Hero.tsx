@@ -4,20 +4,23 @@ import HeroAuthor from "../../assets/HeroAuthor.png";
 import { IconCalendar, IconClock } from "@tabler/icons-react";
 import { useThemeContext } from "../../context/ThemeContext";
 import clsx from "clsx";
+import useAOS from "../../hooks/useAos";
 
 const Hero = () => {
   const { theme } = useThemeContext();
+  useAOS();
 
   return (
     <Container size={1232} className=" py-22.5 px-4 md:px-8">
       <div
         className={clsx(`flex flex-col-reverse md:flex-row gap-6 items-center`)}
+        data-aos="fade-up"
       >
         <div className="w-full md:w-1/2 overflow-hidden rounded-xl">
           <img
             src={HeroBackground}
             alt="Hero"
-            className="w-full h-[250px] sm:h-[300px] md:h-[400px] lg:h-[466px] object-cover"
+            className="w-full h-62.5 sm:h-75 md:h-100 lg:h-116.5 object-cover"
           />
         </div>
 

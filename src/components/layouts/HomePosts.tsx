@@ -8,8 +8,10 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
+import useAOS from "../../hooks/useAos";
 
 const HomePosts = () => {
+  useAOS();
   const { theme } = useThemeContext();
   const { posts, isLoading } = usePosts();
 
@@ -41,12 +43,20 @@ const HomePosts = () => {
         <Loader size={20} />
       ) : (
         <div className="flex justify-center items-center flex-col">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            data-aos="fade-up"
+          >
             {posts.slice(0, 6).map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>
-          <div className="flex gap-5 mt-10 mb-6">
+          <div
+            className="flex gap-5 mt-10 mb-6"
+            data-aos="fade-up"
+            data-aos-duration="600"
+            data-aos-delay="450"
+          >
             <IconChevronLeft
               className={clsx(
                 "border cursor-pointer text-xl  text-[#454655] rounded w-7 h-7",
@@ -70,6 +80,9 @@ const HomePosts = () => {
           </div>
 
           <button
+            data-aos="fade-up"
+            data-aos-duration="600"
+            data-aos-delay="500"
             className={clsx(
               ` flex gap-1 items-center  p-4 rounded  mb-5 cursor-pointer  transition-all duration-300`,
               {
