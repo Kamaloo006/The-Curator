@@ -3,8 +3,8 @@ import HeroBackground from "../../assets/heroBackground.png";
 import HeroAuthor from "../../assets/HeroAuthor.png";
 import { IconCalendar, IconClock } from "@tabler/icons-react";
 import { useThemeContext } from "../../context/ThemeContext";
-import clsx from "clsx";
 import useAOS from "../../hooks/useAos";
+import clsx from "clsx";
 
 const Hero = () => {
   const { theme } = useThemeContext();
@@ -19,6 +19,7 @@ const Hero = () => {
         <div className="w-full md:w-1/2 overflow-hidden rounded-xl">
           <img
             src={HeroBackground}
+            loading="lazy"
             alt="Hero"
             className="w-full h-62.5 sm:h-75 md:h-100 lg:h-116.5 object-cover"
           />
@@ -26,7 +27,11 @@ const Hero = () => {
 
         <div className="w-full md:w-1/2 flex flex-col justify-center">
           <div className="flex items-center gap-4 mb-4">
-            <img src={HeroAuthor} className="w-10 h-10 rounded-full" />
+            <img
+              src={HeroAuthor}
+              className="w-10 h-10 rounded-full"
+              loading="lazy"
+            />
             <div>
               <div
                 className={clsx("text-sm font-semibold", {

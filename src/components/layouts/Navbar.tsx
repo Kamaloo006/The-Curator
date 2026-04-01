@@ -2,11 +2,11 @@ import { IconBell, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
 import { Autocomplete, Burger, Button, Group, Drawer } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import classes from "./Modules/Navbar.module.css";
-import { NavLink } from "react-router-dom";
-import userProfile from "../../assets/userProfile.png";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useThemeContext } from "../../context/ThemeContext";
 import clsx from "clsx";
-
+import { useAuth } from "../../context/AuthContext";
+import userProfile from "../../assets/userProfile.png";
 const links = [
   { link: "/", label: "Discover" },
   { link: "/latest", label: "Latest Posts" },
@@ -14,10 +14,18 @@ const links = [
   { link: "/about", label: "About" },
 ];
 
-export default function HeaderSearch() {
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   const [opened, { toggle, close }] = useDisclosure(false);
   const { theme, toggleTheme } = useThemeContext();
   const { hovered, ref } = useHover();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   const items = links.map((link) => (
     <NavLink
@@ -50,7 +58,7 @@ export default function HeaderSearch() {
         hiddenFrom="sm"
         zIndex={1000}
       >
-        <div className="flex flex-col md:gap-6 gap-2 mt-6 ">
+        <div className="flex flex-col gap-4 mt-6">
           {links.map((link) => (
             <NavLink
               key={link.label}
@@ -62,12 +70,33 @@ export default function HeaderSearch() {
             </NavLink>
           ))}
 
-          <Button ref={ref} color={hovered ? "#3C4AE0" : "#5866FA"} radius={10}>
-            Register
-          </Button>
+          {!user ? (
+            <>
+              <NavLink to="/login" onClick={close}>
+                Login
+              </NavLink>
+              <NavLink to="/register" onClick={close}>
+                Register
+              </NavLink>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 mt-4">
+              <img
+                src={user.avatar || userProfile}
+                className="w-10 h-10 rounded-full"
+              />
+              <button
+                onClick={handleLogout}
+                className="text-red-500 font-semibold"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </Drawer>
 
+      {/* 🔹 HEADER */}
       <header
         className={clsx(
           `sticky top-0 z-50 container lg:px-10 min-w-full sm:px-6 transition-all duration-200`,
@@ -77,7 +106,7 @@ export default function HeaderSearch() {
           },
         )}
       >
-        <div className={`${classes.inner}`}>
+        <div className={classes.inner}>
           <Group>
             <Burger
               opened={opened}
@@ -85,15 +114,14 @@ export default function HeaderSearch() {
               size="sm"
               hiddenFrom="sm"
               color={theme === "dark" ? "white" : "black"}
-              aria-label="Toggle navigation"
             />
 
             <NavLink
               to="/"
-              className={clsx(`text-2xl cursor-pointer leading-2 font-bold`, {
-                "text-[#1B1C1C]": theme === "light",
-                "text-[#F2F0F0]": theme === "dark",
-              })}
+              className={clsx(
+                "text-2xl cursor-pointer font-bold",
+                theme === "dark" ? "text-white" : "text-black",
+              )}
             >
               The Curator
             </NavLink>
@@ -106,9 +134,8 @@ export default function HeaderSearch() {
           <Group className="flex gap-2">
             <Autocomplete
               placeholder="Search stories..."
-              leftSection={<IconSearch size={16} stroke={1.5} />}
-              data={["React", "Angular", "Vue", "Next.js", "Svelte"]}
-              radius={10}
+              leftSection={<IconSearch size={16} />}
+              data={["React", "Laravel", "Design"]}
               visibleFrom="md"
               styles={{
                 input: {
@@ -117,53 +144,67 @@ export default function HeaderSearch() {
                     theme === "dark"
                       ? "1px solid #3C3C3C"
                       : "1px solid #E2E8F0",
-                  color: theme === "dark" ? "red" : "#1B1C1C",
-                  transition: "all 0.2s ease",
-                  "&:focus": {
-                    borderColor: theme === "dark" ? "#84CEF9" : "#1C2AC8",
-                    outline: "none",
-                  },
-                  "&::placeholder": {
-                    color: theme === "dark" ? "#A0A0A0" : "#94A3B8",
-                  },
-                },
-                dropdown: {
-                  color: theme === "dark" ? "#a0a0a0" : "#2c2c2c",
-                  backgroundColor: theme === "dark" ? "#313030" : "white",
+                  color: theme === "dark" ? "#fff" : "#000",
                 },
               }}
             />
 
-            <Group visibleFrom="sm" className="flex gap-2">
-              <Button
-                ref={ref}
-                color={hovered ? "#3C4AE0" : "#5866FA"}
-                radius={10}
-              >
-                Register
-              </Button>
+            <Group visibleFrom="sm" className="flex gap-3 items-center">
+              {!user ? (
+                <>
+                  <NavLink to="/login">
+                    <Button variant="subtle">Login</Button>
+                  </NavLink>
 
-              <IconBell
-                cursor="pointer"
-                color={theme === "dark" ? "white" : "black"}
-              />
-
-              {theme === "dark" ? (
-                <IconSun
-                  onClick={toggleTheme}
-                  className="cursor-pointer text-yellow-400"
-                />
+                  <Button
+                    ref={ref}
+                    onClick={() => navigate("/register")}
+                    color={hovered ? "#3C4AE0" : "#5866FA"}
+                    radius={10}
+                  >
+                    Register
+                  </Button>
+                </>
               ) : (
-                <IconMoon
-                  onClick={toggleTheme}
-                  className="cursor-pointer text-gray-700"
-                />
-              )}
+                <>
+                  <IconBell
+                    cursor="pointer"
+                    color={theme === "dark" ? "white" : "black"}
+                  />
 
-              <img
-                src={userProfile}
-                className="cursor-pointer w-8 h-8 rounded-full"
-              />
+                  {theme === "dark" ? (
+                    <IconSun
+                      onClick={toggleTheme}
+                      className="cursor-pointer text-yellow-400"
+                    />
+                  ) : (
+                    <IconMoon
+                      onClick={toggleTheme}
+                      className="cursor-pointer text-gray-700"
+                    />
+                  )}
+
+                  <img
+                    src={user.avatar || userProfile}
+                    className="w-8 h-8 rounded-full cursor-pointer"
+                  />
+
+                  <button
+                    onClick={handleLogout}
+                    className={clsx(
+                      "bg-[#5866FA] text-[#eee] hover:bg-[#3C4AE0] transition-all duration-300 px-3 py-1 cursor-pointer rounded",
+                      {
+                        "text-red-500 bg-[#eee] hover:bg-[#ddd]":
+                          theme !== "dark",
+                      },
+                    )}
+                  >
+                    <span className="text-md font-bold leading-loose">
+                      Logout
+                    </span>
+                  </button>
+                </>
+              )}
             </Group>
           </Group>
         </div>

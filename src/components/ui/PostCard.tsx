@@ -23,6 +23,7 @@ export function PostCard({ post }: PostCardProps) {
       <Card.Section mb="md">
         <Image
           src={post.image}
+          loading="lazy"
           alt="post"
           className="h-45 sm:h-50 object-cover"
         />

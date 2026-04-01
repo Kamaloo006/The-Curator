@@ -40,7 +40,7 @@ const HomePosts = () => {
 
       {/* CARDS */}
       {isLoading ? (
-        <Loader size={20} />
+        <Loader size={20} color="#8C9EFF" />
       ) : (
         <div className="flex justify-center items-center flex-col">
           <div
@@ -51,12 +51,7 @@ const HomePosts = () => {
               <PostCard key={post.id} post={post} />
             ))}
           </div>
-          <div
-            className="flex gap-5 mt-10 mb-6"
-            data-aos="fade-up"
-            data-aos-duration="600"
-            data-aos-delay="450"
-          >
+          <div className="flex gap-5 mt-10 mb-6">
             <IconChevronLeft
               className={clsx(
                 "border cursor-pointer text-xl  text-[#454655] rounded w-7 h-7",
@@ -79,25 +74,24 @@ const HomePosts = () => {
             />
           </div>
 
-          <button
-            data-aos="fade-up"
-            data-aos-duration="600"
-            data-aos-delay="500"
-            className={clsx(
-              ` flex gap-1 items-center  p-4 rounded  mb-5 cursor-pointer  transition-all duration-300`,
-              {
-                "bg-[#F6F3F2] text-[#3C4AE0] hover:bg-[#dad7d5]":
-                  theme === "light",
-                "bg-[#5866FA] text-[#f6f3f2] hover:bg-[#3C4AE0]":
-                  theme === "dark",
-              },
-            )}
-          >
-            <span className="font-semibold leading-loose">
-              Discover More Stories
-            </span>
-            <IconArrowRight />
-          </button>
+          <div data-aos="fade-up" data-aos-duration="600" data-aos-delay="500">
+            <button
+              className={clsx(
+                ` flex gap-1 items-center  p-4 rounded  mb-5 cursor-pointer  transition-all duration-300`,
+                {
+                  "bg-[#F6F3F2] text-[#3C4AE0] hover:bg-[#dad7d5]":
+                    theme === "light",
+                  "bg-[#5866FA] text-[#f6f3f2] hover:bg-[#3C4AE0]":
+                    theme === "dark",
+                },
+              )}
+            >
+              <span className="font-semibold leading-loose">
+                Discover More Stories
+              </span>
+              <IconArrowRight />
+            </button>
+          </div>
         </div>
       )}
     </Container>
