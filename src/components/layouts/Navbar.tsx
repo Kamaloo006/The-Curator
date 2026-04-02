@@ -27,6 +27,8 @@ export default function Navbar() {
     navigate("/login");
   };
 
+  console.log(user?.avatar);
+
   const items = links.map((link) => (
     <NavLink
       key={link.label}

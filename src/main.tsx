@@ -39,7 +39,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/register",
-    element: <Register />,
+    element: (
+      <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
+        <Register />
+      </MantineProvider>
+    ),
   },
 ]);
 
