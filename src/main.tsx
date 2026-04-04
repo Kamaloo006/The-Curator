@@ -10,6 +10,8 @@ import { ThemeProvider } from "./context/ThemeContext.tsx";
 import ProtectedRoute from "./routes/ProtectedRoute.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { MantineProvider } from "@mantine/core";
+import LatestPosts from "./pages/LatestPosts.tsx";
+import clsx from "clsx";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +29,16 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <About />
       </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/latest",
+    element: (
+      <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
+        <ProtectedRoute>
+          <LatestPosts />
+        </ProtectedRoute>
+      </MantineProvider>
     ),
   },
   {
