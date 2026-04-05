@@ -5,6 +5,7 @@ import { useThemeContext } from "../context/ThemeContext";
 import clsx from "clsx";
 import PostCardHorizontal from "../components/ui/PostCardHorizontal";
 import { usePosts } from "../hooks/usePosts";
+import Sidebar from "../components/sidebar/Sidebar";
 
 const LatestPosts = () => {
   const { theme } = useThemeContext();
@@ -31,20 +32,28 @@ const LatestPosts = () => {
           >
             Latest Insights
           </h1>
-          <p className="w-125 text-gray-500">
+          <p className="w-125 text-gray-500 mb-8">
             Refined perspective on culture, design, and the digital frontier.
             Curated daily by our global editorial collective.
           </p>
 
-          {isLoading ? (
-            <Loader color="#1C2AC8" className="mt-10" />
-          ) : (
-            <div className="flex flex-col">
-              {posts.map((post) => (
-                <PostCardHorizontal post={post} key={post.id} />
-              ))}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Main Posts Section */}
+            <div className="flex-1 min-w-0">
+              {isLoading ? (
+                <Loader color="#1C2AC8" className="mt-10" />
+              ) : (
+                <div className="flex flex-col">
+                  {posts.map((post) => (
+                    <PostCardHorizontal post={post} key={post.id} />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Sidebar Section */}
+            {!isLoading && <Sidebar />}
+          </div>
         </Container>
       </div>
       <Footer />

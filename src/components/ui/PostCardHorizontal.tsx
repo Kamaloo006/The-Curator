@@ -2,12 +2,13 @@ import { Image } from "@mantine/core";
 import clsx from "clsx";
 import { useThemeContext } from "../../context/ThemeContext";
 import type { Post } from "../../types/Post";
-
+import useAOS from "../../hooks/useAOS";
 interface postProps {
   post: Post;
 }
 
 const PostCardHorizontal = ({ post }: postProps) => {
+  useAOS;
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
   return (

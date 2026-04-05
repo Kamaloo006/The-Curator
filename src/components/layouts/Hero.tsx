@@ -3,7 +3,7 @@ import HeroBackground from "../../assets/heroBackground.png";
 import HeroAuthor from "../../assets/HeroAuthor.png";
 import { IconCalendar, IconClock } from "@tabler/icons-react";
 import { useThemeContext } from "../../context/ThemeContext";
-import useAOS from "../../hooks/useAos";
+import useAOS from "../../hooks/useAOS";
 import clsx from "clsx";
 
 const Hero = () => {
