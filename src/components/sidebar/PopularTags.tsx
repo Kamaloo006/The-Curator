@@ -1,24 +1,10 @@
 import clsx from "clsx";
 import { useThemeContext } from "../../context/ThemeContext";
+import { useCategories } from "../../hooks/useCategories";
+import { Loader } from "@mantine/core";
 
-interface Tag {
-  name: string;
-  count?: number;
-}
-
-interface PopularTagsProps {
-  tags?: Tag[];
-}
-
-const PopularTags = ({
-  tags = [
-    { name: "Typography", count: 24 },
-    { name: "Sustainability", count: 18 },
-    { name: "Product Design", count: 15 },
-    { name: "AI Ethics", count: 12 },
-    { name: "Future of Work", count: 9 },
-  ],
-}: PopularTagsProps) => {
+const PopularTags = () => {
+  const { categories, isLoading } = useCategories();
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
 
@@ -35,24 +21,28 @@ const PopularTags = ({
           isDark ? "text-white" : "text-gray-900",
         )}
       >
-        Popular Tags
+        Popular Categories
       </h3>
 
-      <div className="flex flex-wrap gap-2">
-        {tags.map((tag) => (
-          <button
-            key={tag.name}
-            className={clsx(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer",
-              isDark
-                ? "bg-[#2C2B2B] text-gray-300 hover:bg-[#3C3B3B]"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-            )}
-          >
-            {tag.name}
-          </button>
-        ))}
-      </div>
+      {isLoading ? (
+        <Loader color="#6B7280" />
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {(Array.isArray(categories) ? categories : []).map((category) => (
+            <button
+              key={category.name}
+              className={clsx(
+                "px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer",
+                isDark
+                  ? "bg-[#2C2B2B] text-gray-300 hover:bg-[#3C3B3B]"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+              )}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

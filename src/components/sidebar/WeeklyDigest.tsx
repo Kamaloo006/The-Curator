@@ -22,8 +22,8 @@ const WeeklyDigest = () => {
       className={clsx(
         "rounded-2xl p-6 mb-6 text-center",
         isDark
-          ? "bg-gradient-to-br from-[#2C2B2B] to-[#1C1B1B]"
-          : "bg-gradient-to-br from-gray-50 to-white border border-gray-200",
+          ? "bg-linear-to-br from-[#2C2B2B] to-[#1C1B1B]"
+          : "bg-linear-to-br from-gray-50 to-white border border-gray-200",
       )}
     >
       <h3

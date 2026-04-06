@@ -8,7 +8,8 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
-import useAOS from "../../hooks/useAos";
+import { Link } from "react-router-dom";
+import useAOS from "../../hooks/useAOS";
 
 const HomePosts = () => {
   useAOS();
@@ -75,7 +76,8 @@ const HomePosts = () => {
           </div>
 
           <div data-aos="fade-up" data-aos-duration="600" data-aos-delay="500">
-            <button
+            <Link
+              to="/latest"
               className={clsx(
                 ` flex gap-1 items-center  p-4 rounded  mb-5 cursor-pointer  transition-all duration-300`,
                 {
@@ -90,7 +92,7 @@ const HomePosts = () => {
                 Discover More Stories
               </span>
               <IconArrowRight />
-            </button>
+            </Link>
           </div>
         </div>
       )}
