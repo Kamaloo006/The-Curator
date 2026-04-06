@@ -1,4 +1,5 @@
 import { StrictMode } from "react";
+import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
@@ -11,7 +12,12 @@ import ProtectedRoute from "./routes/ProtectedRoute.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { MantineProvider } from "@mantine/core";
 import LatestPosts from "./pages/LatestPosts.tsx";
-import clsx from "clsx";
+
+const withMantine = (children: ReactNode) => (
+  <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
+    {children}
+  </MantineProvider>
+);
 
 const router = createBrowserRouter([
   {
@@ -22,40 +28,29 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-
   {
     path: "/about",
-    element: (
+    element: withMantine(
       <ProtectedRoute>
         <About />
-      </ProtectedRoute>
+      </ProtectedRoute>,
     ),
   },
   {
     path: "/latest",
-    element: (
-      <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
-        <ProtectedRoute>
-          <LatestPosts />
-        </ProtectedRoute>
-      </MantineProvider>
+    element: withMantine(
+      <ProtectedRoute>
+        <LatestPosts />
+      </ProtectedRoute>,
     ),
   },
   {
     path: "/login",
-    element: (
-      <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
-        <Login />
-      </MantineProvider>
-    ),
+    element: withMantine(<Login />),
   },
   {
     path: "/register",
-    element: (
-      <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
-        <Register />
-      </MantineProvider>
-    ),
+    element: withMantine(<Register />),
   },
 ]);
 
