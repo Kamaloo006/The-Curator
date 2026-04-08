@@ -70,7 +70,7 @@ const About = () => {
                 )}
               >
                 The art of
-                <span className="block text-[#5866FA]">
+                <span className="block text-[#5866FA] capitalize tracking-wide font-extrabold mt-2 sm:mt-4">
                   intentional curation.
                 </span>
               </h1>
@@ -91,7 +91,7 @@ const About = () => {
                   href="/latest"
                   size="md"
                   radius="md"
-                  className="bg-[#5866FA] hover:bg-[#3C4AE0]"
+                  color="#5866FA"
                 >
                   Explore Stories
                 </Button>

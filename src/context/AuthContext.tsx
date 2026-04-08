@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (data: { email: string; password: string }) => Promise<void>;
   register: (data: FormData) => Promise<void>;
   logout: () => void;
+  syncUser: (partialUser: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -54,6 +55,17 @@ export const AuthProvider = ({ children }: any) => {
     localStorage.removeItem("token");
   };
 
+  const syncUser = (partialUser: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+
+      const nextUser = { ...prev, ...partialUser };
+      localStorage.setItem("user", JSON.stringify(nextUser));
+
+      return nextUser;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -62,6 +74,7 @@ export const AuthProvider = ({ children }: any) => {
         login: handleLogin,
         register: handleRegister,
         logout: handleLogout,
+        syncUser,
       }}
     >
       {children}

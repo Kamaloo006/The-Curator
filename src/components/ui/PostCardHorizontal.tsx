@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { useThemeContext } from "../../context/ThemeContext";
 import type { Post } from "../../types/Post";
 import useAOS from "../../hooks/useAOS";
+import { useEffect } from "react";
 interface postProps {
   post: Post;
 }
@@ -11,6 +12,9 @@ const PostCardHorizontal = ({ post }: postProps) => {
   useAOS;
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
+  useEffect(() => {
+    console.log(post.author_avatar);
+  }, []);
   return (
     <div
       className={clsx(
@@ -68,7 +72,7 @@ const PostCardHorizontal = ({ post }: postProps) => {
         {/* Author Section */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
-            <Image src={post.author_avatar} alt="Julian Voss" />
+            <Image src={post.author_avatar} alt={post.author} />
           </div>
           <div className="flex flex-col">
             <span

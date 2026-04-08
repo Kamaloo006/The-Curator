@@ -2,7 +2,7 @@ import { IconBell, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
 import { Autocomplete, Burger, Button, Group, Drawer } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import classes from "./Modules/Navbar.module.css";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useThemeContext } from "../../context/ThemeContext";
 import clsx from "clsx";
 import { useAuth } from "../../context/AuthContext";
@@ -83,10 +83,14 @@ export default function Navbar() {
             </>
           ) : (
             <div className="flex items-center gap-3 mt-4">
-              <img
-                src={user.avatar || userProfile}
-                className="w-10 h-10 rounded-full"
-              />
+              <NavLink to="/profile" onClick={close}>
+                <a href="">
+                  <img
+                    src={user.avatar || userProfile}
+                    className="w-10 h-10 rounded-full"
+                  />
+                </a>
+              </NavLink>
               <button
                 onClick={handleLogout}
                 className="text-red-500 font-semibold"
@@ -185,11 +189,12 @@ export default function Navbar() {
                       className="cursor-pointer text-gray-700"
                     />
                   )}
-
-                  <img
-                    src={user.avatar || userProfile}
-                    className="w-8 h-8 rounded-full cursor-pointer"
-                  />
+                  <NavLink to="/profile" onClick={close}>
+                    <img
+                      src={user.avatar || userProfile}
+                      className="w-8 h-8 rounded-full cursor-pointer"
+                    />
+                  </NavLink>
 
                   <button
                     onClick={handleLogout}

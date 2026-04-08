@@ -12,6 +12,7 @@ import ProtectedRoute from "./routes/ProtectedRoute.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { MantineProvider } from "@mantine/core";
 import LatestPosts from "./pages/LatestPosts.tsx";
+import Profile from "./pages/Profile.tsx";
 
 const withMantine = (children: ReactNode) => (
   <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
@@ -26,6 +27,14 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <App />
       </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/profile",
+    element: withMantine(
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>,
     ),
   },
   {
