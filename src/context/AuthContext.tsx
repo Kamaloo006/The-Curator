@@ -5,14 +5,19 @@ interface User {
   name: string;
   email: string;
   avatar: string;
-  role: "user" | "author";
+  role: "user" | "author" | "admin";
   bio: string;
+}
+
+interface LoginResponse {
+  user: User;
+  token: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (data: { email: string; password: string }) => Promise<void>;
+  login: (data: { email: string; password: string }) => Promise<LoginResponse>;
   register: (data: FormData) => Promise<void>;
   logout: () => void;
   syncUser: (partialUser: Partial<User>) => void;
@@ -29,7 +34,10 @@ export const AuthProvider = ({ children }: any) => {
     localStorage.getItem("token"),
   );
 
-  const handleLogin = async (data: { email: string; password: string }) => {
+  const handleLogin = async (data: {
+    email: string;
+    password: string;
+  }): Promise<LoginResponse> => {
     const res = await login(data);
 
     setUser(res.data.user);
@@ -38,7 +46,7 @@ export const AuthProvider = ({ children }: any) => {
     localStorage.setItem("user", JSON.stringify(res.data.user));
     localStorage.setItem("token", res.data.token);
 
-    return res.data;
+    return res.data as LoginResponse;
   };
 
   const handleRegister = async (data: FormData) => {

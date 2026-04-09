@@ -13,6 +13,11 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import { MantineProvider } from "@mantine/core";
 import LatestPosts from "./pages/LatestPosts.tsx";
 import Profile from "./pages/Profile.tsx";
+import AdminRoute from "./routes/AdminRoute.tsx";
+import AdminLayout from "./components/layouts/AdminLayout.tsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+import AdminCategories from "./pages/admin/AdminCategories.tsx";
+import AdminPendingPosts from "./pages/admin/AdminPendingPosts.tsx";
 
 const withMantine = (children: ReactNode) => (
   <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
@@ -60,6 +65,28 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: withMantine(<Register />),
+  },
+  {
+    path: "/admin",
+    element: withMantine(
+      <AdminRoute>
+        <AdminLayout />
+      </AdminRoute>,
+    ),
+    children: [
+      {
+        index: true,
+        element: <AdminDashboard />,
+      },
+      {
+        path: "categories",
+        element: <AdminCategories />,
+      },
+      {
+        path: "pending-posts",
+        element: <AdminPendingPosts />,
+      },
+    ],
   },
 ]);
 

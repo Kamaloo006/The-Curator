@@ -23,8 +23,10 @@ const Login = () => {
     setError("");
 
     try {
-      await login({ email, password });
-      navigate("/");
+      const result = await login({ email, password });
+      const role = result.user?.role;
+
+      navigate(role === "admin" ? "/admin" : "/");
     } catch (error) {
       setError("Invalid email or password. Please try again.");
     } finally {

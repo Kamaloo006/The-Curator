@@ -16,5 +16,5 @@ const [error, setError] = useState();
     } ,[])
 
 
-return {posts, isLoading};
+return {posts, isLoading, error};
 }

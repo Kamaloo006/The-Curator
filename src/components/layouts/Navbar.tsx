@@ -2,7 +2,7 @@ import { IconBell, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
 import { Autocomplete, Burger, Button, Group, Drawer } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import classes from "./Modules/Navbar.module.css";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useThemeContext } from "../../context/ThemeContext";
 import clsx from "clsx";
 import { useAuth } from "../../context/AuthContext";
