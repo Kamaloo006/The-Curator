@@ -11,9 +11,25 @@ export interface PendingPost {
   content: string;
   image?: string;
   status?: string;
-  category?: string;
+  category?: string | null;
   author: string;
   createdAt?: string;
+}
+
+interface PendingPostsResponseItem {
+  id: number;
+  title: string;
+  content: string;
+  image: string;
+  author: string;
+  author_avatar: string | null;
+  date: string;
+  likes_count: number | null;
+  category: string | null;
+}
+
+interface PendingPostsResponse {
+  data: PendingPostsResponseItem[];
 }
 
 interface ApiListResponse<T> {
@@ -29,7 +45,9 @@ const authHeader = (token: string) => ({
 });
 
 
-// clean up function for ensuring the data coming from the backend is in the expected format and to prevent runtime errors due to unexpected data shapes. It also abstracts away the parsing logic from the main API functions, making them cleaner and more focused on their primary tasks.
+// clean up function for ensuring the data coming from the backend is in the expected format and to prevent runtime errors due to unexpected data shapes.
+// It also abstracts away the parsing logic from the main API functions,
+// making them cleaner and more focused on their primary tasks.
 const parseCategory = (item: unknown): AdminCategory | null => {
   if (!item || typeof item !== "object") return null;
 
@@ -42,40 +60,6 @@ const parseCategory = (item: unknown): AdminCategory | null => {
   return { id, name };
 };
 
-const parsePendingPost = (item: unknown): PendingPost | null => {
-  if (!item || typeof item !== "object") return null;
-
-  const raw = item as Record<string, unknown>;
-  const id = Number(raw.id);
-  const title = typeof raw.title === "string" ? raw.title : null;
-  const content = typeof raw.content === "string" ? raw.content : "";
-
-  if (!Number.isFinite(id) || !title) return null;
-
-  const user =
-    raw.user && typeof raw.user === "object"
-      ? (raw.user as Record<string, unknown>)
-      : null;
-
-  const author =
-    typeof raw.author === "string"
-      ? raw.author
-      : typeof user?.name === "string"
-        ? user.name
-        : "Unknown";
-
-  return {
-    id,
-    title,
-    content,
-    image: typeof raw.image === "string" ? raw.image : undefined,
-    status: typeof raw.status === "string" ? raw.status : undefined,
-    category: typeof raw.category === "string" ? raw.category : undefined,
-    author,
-    createdAt:
-      typeof raw.created_at === "string" ? raw.created_at : undefined,
-  };
-};
 
 const toList = <T,>(payload: ApiListResponse<T> | T[] | undefined): T[] => {
   if (!payload) return [];
@@ -129,14 +113,20 @@ export const deleteCategory = async (
 };
 
 export const getPendingPosts = async (token: string): Promise<PendingPost[]> => {
-  const response = await apiClient.get<ApiListResponse<unknown> | unknown[]>(
+  const response = await apiClient.get<PendingPostsResponse>(
     "/posts/pending",
     authHeader(token),
   );
 
-  return toList(response.data)
-    .map(parsePendingPost)
-    .filter((post): post is PendingPost => Boolean(post));
+  return response.data.data.map((post) => ({
+    id: post.id,
+    title: post.title,
+    content: post.content,
+    image: post.image,
+    author: post.author,
+    category: post.category,
+    createdAt: post.date,
+  }));
 };
 
 export const approvePendingPost = async (

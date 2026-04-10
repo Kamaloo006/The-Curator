@@ -18,6 +18,7 @@ import AdminLayout from "./components/layouts/AdminLayout.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminCategories from "./pages/admin/AdminCategories.tsx";
 import AdminPendingPosts from "./pages/admin/AdminPendingPosts.tsx";
+import Publish from "./pages/Publish.tsx";
 
 const withMantine = (children: ReactNode) => (
   <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
@@ -65,6 +66,14 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: withMantine(<Register />),
+  },
+  {
+    path: "/publish",
+    element: withMantine(
+      <ProtectedRoute>
+        <Publish />
+      </ProtectedRoute>,
+    ),
   },
   {
     path: "/admin",

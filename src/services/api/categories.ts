@@ -1,6 +1,7 @@
 import { apiClient } from "./client";
 
 export interface CategoryProps{
+    id?: number;
     name:string;
 }
 
