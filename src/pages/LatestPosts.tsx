@@ -4,12 +4,27 @@ import { Container, Loader } from "@mantine/core";
 import { useThemeContext } from "../context/ThemeContext";
 import clsx from "clsx";
 import PostCardHorizontal from "../components/ui/PostCardHorizontal";
-import { usePosts } from "../hooks/usePosts";
+import { useCategoryPosts, usePosts } from "../hooks/usePosts";
 import Sidebar from "../components/sidebar/Sidebar";
+import { useState } from "react";
 
 const LatestPosts = () => {
   const { theme } = useThemeContext();
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null,
+  );
   const { posts, isLoading } = usePosts();
+  const {
+    categoryPosts,
+    loading: isCategoryLoading,
+    error: categoryError,
+  } = useCategoryPosts(selectedCategoryId);
+
+  const filtered = selectedCategoryId !== null;
+  const shownPosts = filtered ? categoryPosts : posts;
+  const safeShownPosts = Array.isArray(shownPosts) ? shownPosts : [];
+  const shownLoading = filtered ? isCategoryLoading : isLoading;
+
   return (
     <div
       className={clsx({
@@ -23,10 +38,10 @@ const LatestPosts = () => {
         <Container size={1232} className="py-22.5 px-4 md:px-8">
           <h1
             className={clsx(
-              "text-3xl md:text-4xl font-extrabold tracking-tight leading-tight mb-2",
+              "text-3xl md:text-4xl text-[#4551d7] font-extrabold tracking-tight leading-tight mb-2",
               {
-                "text-[#1C2AC8]": theme === "light",
-                "text-[#8C9EFF]": theme === "dark",
+                "": theme === "light",
+                "text-[#1C2AC8]": theme === "dark",
               },
             )}
           >
@@ -40,19 +55,36 @@ const LatestPosts = () => {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Main Posts Section */}
             <div className="flex-1 min-w-0">
-              {isLoading ? (
+              {shownLoading ? (
                 <Loader color="#1C2AC8" className="mt-10" />
               ) : (
                 <div className="flex flex-col">
-                  {posts.map((post) => (
+                  {safeShownPosts.map((post) => (
                     <PostCardHorizontal post={post} key={post.id} />
                   ))}
+
+                  {filtered && !shownLoading && safeShownPosts.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-4">
+                      No posts found for this category.
+                    </p>
+                  )}
+
+                  {filtered && Boolean(categoryError) && (
+                    <p className="text-sm text-red-500 mt-4">
+                      Failed to load category posts.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Sidebar Section */}
-            {!isLoading && <Sidebar />}
+            {!shownLoading && (
+              <Sidebar
+                selectedCategoryId={selectedCategoryId}
+                onCategorySelect={setSelectedCategoryId}
+              />
+            )}
           </div>
         </Container>
       </div>

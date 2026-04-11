@@ -6,7 +6,6 @@ import {
   IconItalic,
   IconLink,
   IconList,
-  IconPhoto,
   IconQuote,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
@@ -33,7 +32,6 @@ const Publish = () => {
   const [image, setImage] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("Editorial");
-  const [readingAccess, setReadingAccess] = useState("Public");
   const [postId, setPostId] = useState<number | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -290,7 +288,7 @@ const Publish = () => {
                   Category
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
-                  {normalizedCategories.slice(0, 5).map((categoryName) => {
+                  {normalizedCategories.map((categoryName) => {
                     const isActive = selectedCategory === categoryName;
 
                     return (
@@ -316,37 +314,7 @@ const Publish = () => {
                       </button>
                     );
                   })}
-                  <button
-                    type="button"
-                    className={clsx("p-2 rounded-full border", {
-                      "border-[#d8d8d8] text-[#6f6f6f]": theme === "light",
-                      "border-[#4a4a4a] text-[#b9b9b9]": theme === "dark",
-                    })}
-                  >
-                    <IconPhoto size={14} />
-                  </button>
                 </div>
-              </div>
-
-              <div>
-                <p className="text-xs tracking-[0.15em] text-[#9b9b9b] uppercase mb-3">
-                  Reading Access
-                </p>
-                <select
-                  value={readingAccess}
-                  onChange={(event) => setReadingAccess(event.target.value)}
-                  className={clsx(
-                    "w-full rounded-lg border px-3 py-2 bg-transparent",
-                    {
-                      "border-[#d8d8d8] text-[#333]": theme === "light",
-                      "border-[#4a4a4a] text-[#ddd]": theme === "dark",
-                    },
-                  )}
-                >
-                  <option value="Public">Public</option>
-                  <option value="Followers">Followers</option>
-                  <option value="Private">Private</option>
-                </select>
               </div>
             </div>
 

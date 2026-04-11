@@ -104,3 +104,19 @@ export const sumbitPost = async (token: string, postId: number): Promise<string>
   return submitPostReview(token, postId);
 };
 
+
+export const getCategoryPosts = async (categoryId:number): Promise<Post[]> =>{
+  const response = await apiClient.get<ApiResponse>(`/categories/${categoryId}/posts`);
+  const payload = response.data as ApiResponse & { category_posts?: Post[] };
+
+  if (Array.isArray(payload.data)) {
+    return payload.data;
+  }
+
+  if (Array.isArray(payload.category_posts)) {
+    return payload.category_posts;
+  }
+
+  return [];
+}
+

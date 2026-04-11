@@ -4,14 +4,22 @@ import PopularTags from "./PopularTags";
 import WeeklyDigest from "./WeeklyDigest";
 import WhoToFollow from "./WhoToFollow";
 
-const Sidebar = () => {
+interface SidebarProps {
+  selectedCategoryId: number | null;
+  onCategorySelect: (categoryId: number | null) => void;
+}
+
+const Sidebar = ({ selectedCategoryId, onCategorySelect }: SidebarProps) => {
   const { posts } = usePosts();
 
   return (
     <aside className="w-full lg:w-80 shrink-0">
       <div className="sticky top-24">
         <TrendingNow posts={posts} />
-        <PopularTags />
+        <PopularTags
+          selectedCategoryId={selectedCategoryId}
+          onCategorySelect={onCategorySelect}
+        />
         <WeeklyDigest />
         <WhoToFollow />
       </div>
