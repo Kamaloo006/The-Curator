@@ -31,7 +31,7 @@ const Publish = () => {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("Editorial");
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [postId, setPostId] = useState<number | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,10 +44,22 @@ const Publish = () => {
     return ["Editorial", "Design", "Technology"];
   }, [categories]);
 
-  const selectedCategoryId = useMemo(() => {
-    const selected = categories.find((item) => item.name === selectedCategory);
-    return typeof selected?.id === "number" ? selected.id : null;
+  const selectedCategoryIds = useMemo(() => {
+    return categories
+      .filter(
+        (item) =>
+          selectedCategory.includes(item.name) && typeof item.id === "number",
+      )
+      .map((item) => item.id as number);
   }, [categories, selectedCategory]);
+
+  const toggleCategory = (categoryName: string) => {
+    setSelectedCategory((prev) =>
+      prev.includes(categoryName)
+        ? prev.filter((name) => name !== categoryName)
+        : [...prev, categoryName],
+    );
+  };
 
   const isValidForSave = title.trim().length > 0 && content.trim().length > 0;
 
@@ -118,11 +130,17 @@ const Publish = () => {
       const currentPostId = postId ?? (await createDraft());
       if (!token) throw new Error("You must be logged in.");
 
-      if (!selectedCategoryId) {
-        throw new Error("Please select a valid category before submitting.");
+      if (selectedCategoryIds.length === 0) {
+        throw new Error(
+          "Please select at least one category before submitting.",
+        );
       }
 
-      await addCategoryToPost(token, currentPostId, selectedCategoryId);
+      await Promise.all(
+        selectedCategoryIds.map((categoryId) =>
+          addCategoryToPost(token, currentPostId, categoryId),
+        ),
+      );
 
       const message = await submitPostReview(token, currentPostId);
       setSuccessMessage(message);
@@ -289,13 +307,13 @@ const Publish = () => {
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   {normalizedCategories.map((categoryName) => {
-                    const isActive = selectedCategory === categoryName;
+                    const isActive = selectedCategory.includes(categoryName);
 
                     return (
                       <button
                         key={categoryName}
                         type="button"
-                        onClick={() => setSelectedCategory(categoryName)}
+                        onClick={() => toggleCategory(categoryName)}
                         className={clsx(
                           "px-3 py-1.5 rounded-full text-sm border transition",
                           {
@@ -315,6 +333,9 @@ const Publish = () => {
                     );
                   })}
                 </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  {selectedCategory.length} selected
+                </p>
               </div>
             </div>
 

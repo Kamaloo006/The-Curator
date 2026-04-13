@@ -12,6 +12,10 @@ const PostCardHorizontal = ({ post }: postProps) => {
   useAOS;
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
+  const categoryLabel =
+    Array.isArray(post.categories) && post.categories.length > 0
+      ? post.categories.map((item) => item.name).join(" • ")
+      : (post.category ?? "Uncategorized");
   useEffect(() => {
     console.log(post.author_avatar);
   }, []);
@@ -36,7 +40,7 @@ const PostCardHorizontal = ({ post }: postProps) => {
       <div className="flex flex-col justify-center flex-1">
         <div className="flex items-center gap-3 mb-3">
           <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#4F5BFF]">
-            {post.category}
+            {categoryLabel}
           </span>
           <span className="text-gray-300">•</span>
           <span

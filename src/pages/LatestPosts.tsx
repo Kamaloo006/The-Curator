@@ -7,6 +7,7 @@ import PostCardHorizontal from "../components/ui/PostCardHorizontal";
 import { useCategoryPosts, usePosts } from "../hooks/usePosts";
 import Sidebar from "../components/sidebar/Sidebar";
 import { useState } from "react";
+import useAOS from "../hooks/useAOS";
 
 const LatestPosts = () => {
   const { theme } = useThemeContext();
@@ -20,9 +21,11 @@ const LatestPosts = () => {
     error: categoryError,
   } = useCategoryPosts(selectedCategoryId);
 
+  useAOS();
   const filtered = selectedCategoryId !== null;
   const shownPosts = filtered ? categoryPosts : posts;
   const safeShownPosts = Array.isArray(shownPosts) ? shownPosts : [];
+  console.log(safeShownPosts);
   const shownLoading = filtered ? isCategoryLoading : isLoading;
 
   return (
@@ -60,7 +63,12 @@ const LatestPosts = () => {
               ) : (
                 <div className="flex flex-col">
                   {safeShownPosts.map((post) => (
-                    <PostCardHorizontal post={post} key={post.id} />
+                    <PostCardHorizontal
+                      post={post}
+                      key={post.id}
+                      data-aos="fade-up"
+                      data-aos-delay="150"
+                    />
                   ))}
 
                   {filtered && !shownLoading && safeShownPosts.length === 0 && (

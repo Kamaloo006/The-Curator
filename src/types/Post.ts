@@ -5,7 +5,8 @@ export interface Post {
   image: string;
   author: string;
   created_at: string;
-  category:string;
+  category?: string | null;
+  categories:Array<{ id: number; name: string }>;
   likes_count: number;
   author_avatar: string;
 }
