@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import userProfile from "../assets/userProfile.png";
 import { changePassword, updateUserInfo } from "../services/api/users";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const Profile = () => {
   const { user, token, syncUser } = useAuth();
@@ -185,6 +186,19 @@ const Profile = () => {
                   className="hidden"
                 />
               </label>
+
+              <Link to={`/my-posts`}>
+                <button
+                  className={clsx(
+                    "text-xs mx-2 rounded-lg px-3 py-0.5 inline-flex font-bold cursor-pointer",
+                    isDark
+                      ? "border-[#2e3c5b] bg-[#5866FA] text-[#eee]"
+                      : "bg-[#EBEDF2] text-[#4B5563] hover:bg-[#DFE3EB]",
+                  )}
+                >
+                  My Posts
+                </button>
+              </Link>
               <h2
                 className={clsx(
                   "text-2xl font-bold leading-tight mb-1",

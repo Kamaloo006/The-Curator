@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Post } from "../types/Post";
-import { getCategoryPosts, getPosts } from "../services/api/posts";
+import { getCategoryPosts, getPosts, getUserPosts } from "../services/api/posts";
 
 export const usePosts = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -39,3 +39,22 @@ export const useCategoryPosts = (categoryId: number | null) => {
 
     return { categoryPosts, loading, error };
 };
+
+export const useUserPosts = (user_id:number) => {
+    const [loading, setLoading] = useState(false);
+    const [userPosts, setUserPosts] = useState<Post[]>([]);
+    const [error, setError] = useState<unknown>(null);
+    
+
+    
+
+    useEffect(() => {
+        setLoading(true);
+        getUserPosts(user_id)
+        .then((data) => setUserPosts(data))
+        .catch((e) => setError(e))
+        .finally(() => setLoading(false))
+    } , [user_id])
+
+    return {userPosts, loading,error};
+}

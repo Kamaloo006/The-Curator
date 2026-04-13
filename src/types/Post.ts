@@ -9,4 +9,5 @@ export interface Post {
   categories:Array<{ id: number; name: string }>;
   likes_count: number;
   author_avatar: string;
+  status: 'published'| 'draft'| 'archived'| 'pending'
 }

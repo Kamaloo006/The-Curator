@@ -43,6 +43,18 @@ export const getPosts = async (): Promise<Post[]> => {
   return response.data.data;
 };
 
+export const getUserPosts = async (user_id:number): Promise<Post[]> => {
+  const response = await apiClient.get(`users/${user_id}/posts`);
+  const payload = response.data as ApiResponse & { posts?: Post[] };
+  
+  if(Array.isArray(payload.data)) return payload.data;
+  if(Array.isArray(payload.posts)) return payload.posts;
+
+  return [];
+
+ 
+}
+
 export const saveDraftPost = async (
   token: string,
   payload: CreatePostPayload,
