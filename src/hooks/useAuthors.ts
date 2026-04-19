@@ -1,19 +1,13 @@
-import { useState, useEffect } from "react"
 import type {Author} from '../types/Author';
 import { getAuthors } from "../services/api/authors";
+import { useQuery } from "@tanstack/react-query";
 
-export const useAuthors = () =>{
+export const useAuthors = () => {
+    const {data:authors = [], isLoading} = useQuery<Author[]>({
+        queryKey:["authors"],
+        queryFn: getAuthors,
+        staleTime: 1000 * 5 * 60 ,
+    })
 
-const [isLoading, setIsLoading] = useState(false);
-const [authors, setAuthors] = useState<Author[]>([]);
-    useEffect(()=> {
-        setIsLoading(true);
-        getAuthors()
-        .then((data) => setAuthors(data))
-        .catch(() => {})
-        .finally(() => setIsLoading(false));
-    } ,[])
-
-
-return {authors, isLoading};
+    return {authors, isLoading};
 }

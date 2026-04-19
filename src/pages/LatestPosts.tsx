@@ -17,7 +17,7 @@ const LatestPosts = () => {
   const { posts, isLoading } = usePosts();
   const {
     categoryPosts,
-    loading: isCategoryLoading,
+    isLoading: isCategoryLoading,
     error: categoryError,
   } = useCategoryPosts(selectedCategoryId);
 
@@ -25,7 +25,6 @@ const LatestPosts = () => {
   const filtered = selectedCategoryId !== null;
   const shownPosts = filtered ? categoryPosts : posts;
   const safeShownPosts = Array.isArray(shownPosts) ? shownPosts : [];
-  console.log(safeShownPosts);
   const shownLoading = filtered ? isCategoryLoading : isLoading;
 
   return (

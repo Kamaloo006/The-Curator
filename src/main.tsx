@@ -20,6 +20,7 @@ import AdminCategories from "./pages/admin/AdminCategories.tsx";
 import AdminPendingPosts from "./pages/admin/AdminPendingPosts.tsx";
 import Publish from "./pages/Publish.tsx";
 import ProfilePosts from "./pages/ProfilePosts.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const withMantine = (children: ReactNode) => (
   <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
@@ -108,12 +109,16 @@ const router = createBrowserRouter([
   },
 ]);
 
+const queryClient = new QueryClient();
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider>
-      <ThemeProvider>
-        <RouterProvider router={router} />
-      </ThemeProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );

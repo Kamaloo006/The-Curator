@@ -9,7 +9,7 @@ interface TrendingNowProps {
 const TrendingNow = ({ posts }: TrendingNowProps) => {
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
-  const trendingPosts = posts.slice(0, 3);
+  const trendingPosts = Array.isArray(posts) ? posts.slice(0, 3) : posts;
 
   return (
     <div

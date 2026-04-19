@@ -25,18 +25,20 @@ const ProfilePosts = () => {
   const { user } = useAuth();
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
-  const { userPosts, loading } = useUserPosts(user?.id ?? 0);
+  const { userPosts, isLoading } = useUserPosts(user?.id ?? 0);
 
   if (!user) {
     return <p className="p-6">Please log in to view your posts.</p>;
   }
 
-  const totalWritten = userPosts.length;
-  const publishedCount = userPosts.filter(
+  const totalWritten = userPosts?.length;
+  const publishedCount = userPosts?.filter(
     (post) => post.status === "published",
   ).length;
-  const draftCount = userPosts.filter((post) => post.status === "draft").length;
-  const pendingCount = userPosts.filter(
+  const draftCount = userPosts?.filter(
+    (post) => post.status === "draft",
+  ).length;
+  const pendingCount = userPosts?.filter(
     (post) => post.status === "pending",
   ).length;
 
@@ -121,7 +123,7 @@ const ProfilePosts = () => {
                   "text-[#f9fafb]": isDark,
                 })}
               >
-                {loading ? "--" : String(stat.value).padStart(2, "0")}
+                {isLoading ? "--" : String(stat.value).padStart(2, "0")}
               </p>
             </div>
           ))}
@@ -170,15 +172,15 @@ const ProfilePosts = () => {
                 },
               )}
             >
-              {userPosts.length} total
+              {userPosts?.length} total
             </div>
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="p-10 flex justify-center">
               <Loader color="#5866FA" />
             </div>
-          ) : userPosts.length > 0 ? (
+          ) : (userPosts?.length ?? 0 > 0) ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-190 border-collapse">
                 <thead>
@@ -199,7 +201,7 @@ const ProfilePosts = () => {
                 </thead>
 
                 <tbody>
-                  {userPosts.map((post) => (
+                  {userPosts?.map((post) => (
                     <tr
                       key={post.id}
                       className={clsx("border-t", {

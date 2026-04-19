@@ -15,7 +15,7 @@ const Sidebar = ({ selectedCategoryId, onCategorySelect }: SidebarProps) => {
   return (
     <aside className="w-full lg:w-80 shrink-0">
       <div className="sticky top-24">
-        <TrendingNow posts={posts} />
+        <TrendingNow posts={posts ?? []} />
         <PopularTags
           selectedCategoryId={selectedCategoryId}
           onCategorySelect={onCategorySelect}
