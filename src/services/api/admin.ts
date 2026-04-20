@@ -5,6 +5,11 @@ export interface AdminCategory {
   name: string;
 }
 
+export interface MutationProps{
+  postId:number;
+  action: "approve" | "reject";
+}
+
 export interface PendingPost {
   id: number;
   title: string;

@@ -1,78 +1,68 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import clsx from "clsx";
-import { isAxiosError } from "axios";
+// import { isAxiosError } from "axios";
 import { useThemeContext } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import {
   approvePendingPost,
   getPendingPosts,
   rejectPendingPost,
+  type MutationProps,
   type PendingPost,
 } from "../../services/api/admin";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const AdminPendingPosts = () => {
   const { theme } = useThemeContext();
   const { token } = useAuth();
-
-  const [posts, setPosts] = useState<PendingPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
   const [actionPostId, setActionPostId] = useState<number | null>(null);
 
-  const extractErrorMessage = (err: unknown, fallback: string): string => {
-    if (isAxiosError(err)) {
-      const payload = err.response?.data as { message?: string } | undefined;
-      if (payload?.message) return payload.message;
-    }
+  // get pending posts using react query
+  const {
+    data: posts = [],
+    isLoading,
+    error,
+  } = useQuery<PendingPost[]>({
+    queryKey: ["pendingPosts"],
+    queryFn: () => {
+      if (!token) return Promise.resolve([]);
+      return getPendingPosts(token);
+    },
+    staleTime: 1000 * 5 * 60,
+    enabled: Boolean(token),
+  });
 
-    if (err instanceof Error && err.message) return err.message;
+  // handle moderation action using react query mutation
 
-    return fallback;
-  };
+  const { mutate } = useMutation<void, Error, MutationProps>({
+    mutationFn: ({ postId, action }) => {
+      if (!token) throw new Error("Missing auth token.");
 
-  const loadPendingPosts = async () => {
-    if (!token) return;
+      if (action === "approve") {
+        return approvePendingPost(token, postId);
+      } else {
+        return rejectPendingPost(token, postId);
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["pendingPosts"] });
+    },
+    onSettled: () => {
+      setActionPostId(null);
+    },
+  });
 
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const data = await getPendingPosts(token);
-      setPosts(data);
-    } catch (err) {
-      setError(extractErrorMessage(err, "Could not load pending posts."));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPendingPosts();
-  }, [token]);
-
-  const handleModerationAction = async (
+  const handleModerationAction = (
     postId: number,
     action: "approve" | "reject",
   ) => {
-    if (!token) return;
-
     setActionPostId(postId);
-    setError("");
 
-    try {
-      if (action === "approve") {
-        await approvePendingPost(token, postId);
-      } else {
-        await rejectPendingPost(token, postId);
-      }
-
-      setPosts((prev) => prev.filter((post) => post.id !== postId));
-    } catch (err) {
-      setError(extractErrorMessage(err, `Failed to ${action} post.`));
-    } finally {
-      setActionPostId(null);
-    }
+    mutate({ postId, action });
   };
+
+  const errorMessage = error instanceof Error ? error.message : "";
 
   return (
     <section className="space-y-6">
@@ -95,9 +85,9 @@ const AdminPendingPosts = () => {
         </p>
       </header>
 
-      {error && (
+      {errorMessage && (
         <p className="rounded-xl bg-red-100 text-red-700 px-4 py-2 text-sm">
-          {error}
+          {errorMessage}
         </p>
       )}
 

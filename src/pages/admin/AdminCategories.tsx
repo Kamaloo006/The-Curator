@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import clsx from "clsx";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useThemeContext } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -13,57 +14,65 @@ import {
 const AdminCategories = () => {
   const { theme } = useThemeContext();
   const { token } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [name, setName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(
+    null,
+  );
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const loadCategories = async () => {
-    if (!token) return;
+  const categoriesQueryKey = ["adminCategories"];
 
-    setIsLoading(true);
-    setError("");
+  const {
+    data: categories = [],
+    isLoading,
+    error: categoriesError,
+  } = useQuery<AdminCategory[]>({
+    queryKey: categoriesQueryKey,
+    queryFn: () => {
+      if (!token) return Promise.resolve([]);
+      return getAdminCategories(token);
+    },
+    enabled: Boolean(token),
+  });
 
-    try {
-      const data = await getAdminCategories(token);
-      setCategories(data);
-    } catch {
-      setError("Could not load categories.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const createCategoryMutation = useMutation({
+    mutationFn: (categoryName: string) => {
+      if (!token) throw new Error("Missing auth token.");
+      return createCategory(token, categoryName);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: categoriesQueryKey });
+    },
+  });
 
-  useEffect(() => {
-    loadCategories();
-  }, [token]);
+  const deleteCategoryMutation = useMutation({
+    mutationFn: (categoryId: number) => {
+      if (!token) throw new Error("Missing auth token.");
+      return deleteCategory(token, categoryId);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: categoriesQueryKey });
+    },
+  });
+
+  const isSubmitting = createCategoryMutation.isPending;
 
   const onAddCategory = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!token || !name.trim()) return;
 
-    setIsSubmitting(true);
     setError("");
     setSuccess("");
 
     try {
-      const created = await createCategory(token, name.trim());
-
-      if (created) {
-        setCategories((prev) => [created, ...prev]);
-      } else {
-        await loadCategories();
-      }
-
+      await createCategoryMutation.mutateAsync(name.trim());
       setName("");
       setSuccess("Category added successfully.");
     } catch {
       setError("Failed to add category.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -78,15 +87,19 @@ const AdminCategories = () => {
 
     setError("");
     setSuccess("");
+    setDeletingCategoryId(category.id);
 
     try {
-      await deleteCategory(token, category.id);
-      setCategories((prev) => prev.filter((item) => item.id !== category.id));
+      await deleteCategoryMutation.mutateAsync(category.id);
       setSuccess("Category deleted successfully.");
     } catch {
       setError("Failed to delete category.");
+    } finally {
+      setDeletingCategoryId(null);
     }
   };
+
+  const categoryLoadError = categoriesError ? "Could not load categories." : "";
 
   return (
     <section className="space-y-6">
@@ -141,9 +154,9 @@ const AdminCategories = () => {
         </button>
       </form>
 
-      {error && (
+      {(error || categoryLoadError) && (
         <p className="rounded-xl bg-red-100 text-red-700 px-4 py-2 text-sm">
-          {error}
+          {error || categoryLoadError}
         </p>
       )}
 
@@ -189,9 +202,16 @@ const AdminCategories = () => {
                 </span>
                 <button
                   onClick={() => onDeleteCategory(category)}
-                  className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200"
+                  disabled={
+                    deleteCategoryMutation.isPending &&
+                    deletingCategoryId === category.id
+                  }
+                  className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Delete
+                  {deleteCategoryMutation.isPending &&
+                  deletingCategoryId === category.id
+                    ? "Deleting..."
+                    : "Delete"}
                 </button>
               </li>
             ))}
