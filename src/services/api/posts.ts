@@ -5,6 +5,10 @@ interface ApiResponse {
   data: Post[];
 }
 
+interface SinglePostApiResponse {
+  data: Post;
+}
+
 interface CreatePostPayload {
   title: string;
   content: string;
@@ -40,6 +44,11 @@ const extractPostId = (payload: CreatePostResponse): number | null => {
 
 export const getPosts = async (): Promise<Post[]> => {
   const response = await apiClient.get<ApiResponse>("/posts");
+  return response.data.data;
+};
+
+export const getPostById = async (postId: number): Promise<Post> => {
+  const response = await apiClient.get<SinglePostApiResponse>(`/posts/${postId}`);
   return response.data.data;
 };
 

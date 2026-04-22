@@ -35,6 +35,7 @@ const AdminCategories = () => {
       if (!token) return Promise.resolve([]);
       return getAdminCategories(token);
     },
+    staleTime: 1000 * 5 * 60,
     enabled: Boolean(token),
   });
 

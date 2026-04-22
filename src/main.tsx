@@ -21,6 +21,7 @@ import AdminPendingPosts from "./pages/admin/AdminPendingPosts.tsx";
 import Publish from "./pages/Publish.tsx";
 import ProfilePosts from "./pages/ProfilePosts.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import PostDetails from "./pages/PostDetails.tsx";
 
 const withMantine = (children: ReactNode) => (
   <MantineProvider theme={{ fontFamily: "Manrope, sans-serif" }}>
@@ -58,6 +59,14 @@ const router = createBrowserRouter([
     element: withMantine(
       <ProtectedRoute>
         <LatestPosts />
+      </ProtectedRoute>,
+    ),
+  },
+  {
+    path: "/posts/:id",
+    element: withMantine(
+      <ProtectedRoute>
+        <PostDetails />
       </ProtectedRoute>,
     ),
   },
