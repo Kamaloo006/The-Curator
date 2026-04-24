@@ -1,37 +1,36 @@
 import { IconArrowRight } from "@tabler/icons-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useThemeContext } from "../context/ThemeContext";
-import clsx from "clsx";
 import { Loader } from "@mantine/core";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import clsx from "clsx";
+
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
 
 const Login = () => {
   const { login } = useAuth();
   const { theme } = useThemeContext();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
   const isDark = theme === "dark";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const { register, handleSubmit } = useForm<LoginFormValues>();
 
-    try {
-      const result = await login({ email, password });
+  const loginMutation = useMutation({
+    mutationFn: (loginData: LoginFormValues) => login(loginData),
+    onSuccess: (result) => {
       const role = result.user?.role;
-
       navigate(role === "admin" ? "/admin" : "/");
-    } catch (error) {
-      setError("Invalid email or password. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onSubmit: SubmitHandler<LoginFormValues> = (data) => {
+    loginMutation.mutate(data);
   };
 
   const inputStyle = clsx(
@@ -68,8 +67,8 @@ const Login = () => {
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {loginMutation.isError && (
             <div
               className={clsx(
                 "p-3 rounded-xl text-xs font-bold text-center border",
@@ -78,7 +77,7 @@ const Login = () => {
                   : "bg-red-50 border-red-100 text-red-600",
               )}
             >
-              {error}
+              Invalid email or password. Please try again.
             </div>
           )}
 
@@ -86,12 +85,11 @@ const Login = () => {
             <label className={labelStyle}>Email Address</label>
             <input
               type="email"
+              {...register("email")}
               placeholder="curator@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={inputStyle}
-              disabled={loading}
               required
+              className={inputStyle}
+              disabled={loginMutation.isPending}
             />
           </div>
 
@@ -102,23 +100,22 @@ const Login = () => {
             <input
               type="password"
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register("password")}
               className={inputStyle}
-              disabled={loading}
+              disabled={loginMutation.isPending}
               required
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loginMutation.isPending}
             className={clsx(
               "w-full bg-[#4F5BFF] hover:bg-[#3D49E6] text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2",
-              loading && "opacity-70 cursor-not-allowed",
+              loginMutation.isPending && "opacity-70 cursor-not-allowed",
             )}
           >
-            {loading ? (
+            {loginMutation.isPending ? (
               <Loader color="white" size="sm" />
             ) : (
               <>

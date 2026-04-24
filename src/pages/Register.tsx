@@ -4,46 +4,54 @@ import { useNavigate, Link } from "react-router-dom";
 import { useThemeContext } from "../context/ThemeContext";
 import clsx from "clsx";
 import { Loader } from "@mantine/core";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+
+interface RegisterFormValues {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  bio: string;
+  avatar: FileList;
+}
 
 const Register = () => {
-  const { register } = useAuth();
+  const auth = useAuth();
   const navigate = useNavigate();
   const { theme } = useThemeContext();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    avatar: null as File | null,
-    password_confirmation: "",
-    bio: "",
+  const { register, handleSubmit } = useForm<RegisterFormValues>();
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const registerMutation = useMutation({
+    mutationFn: (formData: FormData) => auth.register(formData),
+    onSuccess: () => {
+      navigate("/login");
+    },
+    onError: (err: any) => {
+      const message =
+        err?.response?.data?.message ||
+        "Registration failed. Please check your details and try again.";
+      setErrorMessage(message);
+    },
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
     const formData = new FormData();
 
-    formData.append("name", form.name);
-    formData.append("email", form.email);
-    formData.append("password", form.password);
-    formData.append("password_confirmation", form.password_confirmation);
-    formData.append("bio", form.bio);
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("password_confirmation", data.password_confirmation);
+    formData.append("bio", data.bio || "");
+    const avatarFile = data.avatar?.[0];
 
-    if (form.avatar) {
-      formData.append("avatar", form.avatar);
+    if (avatarFile) {
+      formData.append("avatar", avatarFile);
     }
-    setLoading(true);
-    try {
-      await register(formData);
-      navigate("/login");
-    } catch (err: any) {
-      console.log(err.response?.data);
-      alert(JSON.stringify(err.response?.data));
-    } finally {
-      setLoading(false);
-    }
+    setErrorMessage("");
+    registerMutation.mutate(formData);
   };
 
   const inputStyle = clsx(
@@ -87,14 +95,20 @@ const Register = () => {
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {errorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
           <div>
             <label className={labelStyle}>Full Name</label>
             <input
               type="text"
               placeholder="John Doe"
               className={inputStyle}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              {...register("name")}
               required
             />
           </div>
@@ -105,7 +119,7 @@ const Register = () => {
               type="email"
               placeholder="curator@example.com"
               className={inputStyle}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              {...register("email")}
               required
             />
           </div>
@@ -117,7 +131,7 @@ const Register = () => {
                 type="password"
                 placeholder="••••••••"
                 className={inputStyle}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                {...register("password")}
                 required
               />
             </div>
@@ -127,9 +141,7 @@ const Register = () => {
                 type="password"
                 placeholder="••••••••"
                 className={inputStyle}
-                onChange={(e) =>
-                  setForm({ ...form, password_confirmation: e.target.value })
-                }
+                {...register("password_confirmation")}
                 required
               />
             </div>
@@ -140,7 +152,7 @@ const Register = () => {
             <textarea
               placeholder="Tell us about yourself..."
               className={`${inputStyle} resize-none h-20`}
-              onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              {...register("bio")}
             />
           </div>
 
@@ -149,21 +161,23 @@ const Register = () => {
             <input
               type="file"
               className={`text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold ${theme === "light" ? "file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" : "file:bg-[#2C2C2C] file:text-gray-400 hover:file:bg-[#2f2f2f]"} transition-all duration-300 cursor-pointer`}
-              onChange={(e) =>
-                setForm({ ...form, avatar: e.target.files?.[0] || null })
-              }
+              {...register("avatar")}
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={registerMutation.isPending}
             className={clsx(
               "w-full bg-[#4F5BFF] hover:bg-[#3D49E6] text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2",
-              loading && "opacity-70 cursor-not-allowed",
+              registerMutation.isPending && "opacity-70 cursor-not-allowed",
             )}
           >
-            {loading ? <Loader color="white" size="sm" /> : <>Create Account</>}
+            {registerMutation.isPending ? (
+              <Loader color="white" size="sm" />
+            ) : (
+              <>Create Account</>
+            )}
           </button>
         </form>
 
