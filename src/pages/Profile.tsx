@@ -9,27 +9,148 @@ import userProfile from "../assets/userProfile.png";
 import { changePassword, updateUserInfo } from "../services/api/users";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+
+interface ProfileFormValues {
+  fullName: string;
+  email: string;
+  bio: string;
+  currentPassword: string;
+  newPassword: string;
+  avatar: FileList;
+}
+
+const defaultBio =
+  "Exploring the intersection of architectural Brutalism and modern digital interfaces. Based in London. Dedicated to finding the quiet moments in a loud digital world.";
 
 const Profile = () => {
   const { user, token, syncUser } = useAuth();
   const { theme } = useThemeContext();
   const isDark = theme === "dark";
 
-  const [fullName, setFullName] = useState(user?.name || "Elena Sterling");
-  const [publicEmail, setPublicEmail] = useState(
-    user?.email || "e.sterling@curator.com",
-  );
-  const [bio, setBio] = useState(
-    user?.bio ||
-      "Exploring the intersection of architectural Brutalism and modern digital interfaces. Based in London. Dedicated to finding the quiet moments in a loud digital world.",
-  );
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+
+  const { register, handleSubmit, reset, watch } = useForm<ProfileFormValues>({
+    defaultValues: {
+      fullName: user?.name || "Elena Sterling",
+      email: user?.email || "e.sterling@curator.com",
+      bio: user?.bio || defaultBio,
+      currentPassword: "",
+      newPassword: "",
+    },
+  });
+
+  const watchedFullName = watch("fullName");
+  const watchedBio = watch("bio");
+  const watchedAvatar = watch("avatar");
+
+  useEffect(() => {
+    reset({
+      fullName: user?.name || "Elena Sterling",
+      email: user?.email || "e.sterling@curator.com",
+      bio: user?.bio || defaultBio,
+      currentPassword: "",
+      newPassword: "",
+    });
+  }, [user, reset]);
+
+  useEffect(() => {
+    const selectedFile = watchedAvatar?.[0];
+
+    if (!selectedFile) {
+      setAvatarPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setAvatarPreview(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [watchedAvatar]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (formData: ProfileFormValues) => {
+      if (!user || !token) {
+        throw new Error("You must be logged in to update your profile.");
+      }
+
+      const payload = new FormData();
+      payload.append("name", formData.fullName.trim());
+      payload.append("bio", formData.bio.trim());
+
+      const selectedFile = formData.avatar?.[0];
+      if (selectedFile) {
+        payload.append("avatar", selectedFile);
+      }
+
+      const userResponse = await updateUserInfo(user.id, token, payload);
+
+      if (formData.currentPassword && formData.newPassword) {
+        await changePassword(user.id, token, {
+          current_password: formData.currentPassword,
+          new_password: formData.newPassword,
+        });
+      }
+
+      return userResponse;
+    },
+    onSuccess: (userResponse) => {
+      syncUser({
+        name: userResponse.user.name,
+        bio: userResponse.user.bio,
+        avatar: userResponse.user.avatar,
+        role: userResponse.user.role,
+      });
+
+      reset({
+        fullName: userResponse.user.name,
+        email: user?.email || "",
+        bio: userResponse.user.bio || "",
+        currentPassword: "",
+        newPassword: "",
+      });
+
+      setStatusMessage("Profile updated successfully.");
+      setErrorMessage("");
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const message =
+          (error.response?.data as { message?: string })?.message ||
+          "Update failed. Please try again.";
+        setErrorMessage(message);
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Update failed. Please try again.");
+      }
+      setStatusMessage("");
+    },
+  });
+
+  const handleCancel = () => {
+    reset({
+      fullName: user?.name || "",
+      email: user?.email || "",
+      bio: user?.bio || "",
+      currentPassword: "",
+      newPassword: "",
+    });
+
+    setStatusMessage("");
+    setErrorMessage("");
+  };
+
+  const onSubmit: SubmitHandler<ProfileFormValues> = (data) => {
+    updateProfileMutation.mutate(data);
+  };
+
+  const isSaving = updateProfileMutation.isPending;
 
   const cardBase = clsx(
     "rounded-2xl border transition-colors duration-200",
@@ -56,103 +177,6 @@ const Profile = () => {
   const buttonBase =
     "px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer";
 
-  useEffect(() => {
-    return () => {
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview);
-      }
-    };
-  }, [avatarPreview]);
-
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-
-    console.log(`file ${file?.name} selected`);
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-
-    if (file) {
-      setAvatarPreview(URL.createObjectURL(file));
-    } else {
-      setAvatarPreview(null);
-    }
-
-    setAvatarFile(file);
-  };
-
-  const handleCancel = () => {
-    setFullName(user?.name || "");
-    setPublicEmail(user?.email || "");
-    setBio(user?.bio || "");
-    setCurrentPassword("");
-    setNewPassword("");
-    setAvatarFile(null);
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview);
-      setAvatarPreview(null);
-    }
-    setStatusMessage("");
-    setErrorMessage("");
-  };
-
-  const handleUpdateProfile = async () => {
-    if (!user || !token) {
-      setErrorMessage("You must be logged in to update your profile.");
-      return;
-    }
-
-    setIsSaving(true);
-    setStatusMessage("");
-    setErrorMessage("");
-
-    try {
-      const formData = new FormData();
-      formData.append("name", fullName);
-      formData.append("bio", bio);
-
-      if (avatarFile) {
-        formData.append("avatar", avatarFile);
-      }
-
-      const userResponse = await updateUserInfo(user.id, token, formData);
-      console.log("hello" + userResponse.user.avatar);
-      syncUser({
-        name: userResponse.user.name,
-        bio: userResponse.user.bio,
-        avatar: userResponse.user.avatar,
-        role: userResponse.user.role,
-      });
-
-      if (currentPassword && newPassword) {
-        await changePassword(user.id, token, {
-          current_password: currentPassword,
-          new_password: newPassword,
-        });
-      }
-
-      setCurrentPassword("");
-      setNewPassword("");
-      setAvatarFile(null);
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview);
-        setAvatarPreview(null);
-      }
-      setStatusMessage("Profile updated successfully.");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const message =
-          (error.response?.data as { message?: string })?.message ||
-          "Update failed. Please try again.";
-        setErrorMessage(message);
-      } else {
-        setErrorMessage("Update failed. Please try again.");
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <div
       className={clsx("min-h-screen transition-colors duration-200", {
@@ -162,12 +186,15 @@ const Profile = () => {
     >
       <Navbar />
       <Container size={1232} className="py-10 md:py-14 px-4 md:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+        >
           <aside className="lg:col-span-4 xl:col-span-3 space-y-4">
             <div className={clsx(cardBase, "p-6")}>
               <img
                 src={avatarPreview || user?.avatar || userProfile}
-                alt={fullName}
+                alt={watchedFullName}
                 className="w-20 h-20 rounded-xl object-cover mb-5"
               />
               <label
@@ -182,13 +209,14 @@ const Profile = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleAvatarChange}
+                  {...register("avatar")}
                   className="hidden"
                 />
               </label>
 
-              <Link to={`/my-posts`}>
+              <Link to="/my-posts">
                 <button
+                  type="button"
                   className={clsx(
                     "text-xs mx-2 rounded-lg px-3 py-0.5 inline-flex font-bold cursor-pointer",
                     isDark
@@ -205,7 +233,7 @@ const Profile = () => {
                   isDark ? "text-[#F3F4F6]" : "text-[#1F2937]",
                 )}
               >
-                {fullName}
+                {watchedFullName}
               </h2>
               <p
                 className={clsx(
@@ -221,8 +249,8 @@ const Profile = () => {
                   isDark ? "text-[#A1A1AA]" : "text-[#6B7280]",
                 )}
               >
-                {bio.slice(0, 96)}
-                {bio.length > 96 ? "..." : ""}
+                {watchedBio?.slice(0, 96)}
+                {watchedBio && watchedBio.length > 96 ? "..." : ""}
               </p>
             </div>
 
@@ -258,8 +286,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="text"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
+                    {...register("fullName")}
                     className={inputClass}
                   />
                 </div>
@@ -275,8 +302,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="email"
-                    value={publicEmail}
-                    onChange={(event) => setPublicEmail(event.target.value)}
+                    {...register("email")}
                     className={inputClass}
                     disabled
                   />
@@ -293,8 +319,7 @@ const Profile = () => {
                   Editorial Biography
                 </label>
                 <textarea
-                  value={bio}
-                  onChange={(event) => setBio(event.target.value)}
+                  {...register("bio")}
                   rows={5}
                   className={inputClass}
                 />
@@ -323,8 +348,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="password"
-                    value={currentPassword}
-                    onChange={(event) => setCurrentPassword(event.target.value)}
+                    {...register("currentPassword")}
                     className={inputClass}
                   />
                 </div>
@@ -340,13 +364,13 @@ const Profile = () => {
                   </label>
                   <input
                     type="password"
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
+                    {...register("newPassword")}
                     className={inputClass}
                   />
                 </div>
               </div>
             </div>
+
             {(statusMessage || errorMessage) && (
               <div
                 className={clsx(
@@ -363,6 +387,7 @@ const Profile = () => {
                 {statusMessage || errorMessage}
               </div>
             )}
+
             <div className="flex items-center justify-end gap-3 pt-1">
               <button
                 type="button"
@@ -378,8 +403,7 @@ const Profile = () => {
                 Cancel Changes
               </button>
               <button
-                type="button"
-                onClick={handleUpdateProfile}
+                type="submit"
                 disabled={isSaving}
                 className={clsx(
                   buttonBase,
@@ -394,7 +418,7 @@ const Profile = () => {
               </button>
             </div>
           </section>
-        </div>
+        </form>
       </Container>
       <Footer />
     </div>

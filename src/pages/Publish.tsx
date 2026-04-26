@@ -8,35 +8,64 @@ import {
   IconList,
   IconQuote,
 } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
-import type { ChangeEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import { Footer } from "../components/layouts/Footer";
 import Navbar from "../components/layouts/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useThemeContext } from "../context/ThemeContext";
 import { useCategories } from "../hooks/useCategories";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
 import {
   addCategoryToPost,
   saveDraftPost,
   submitPostReview,
 } from "../services/api/posts";
 
+interface PublishFormValues {
+  title: string;
+  content: string;
+  image: FileList;
+}
+
 const Publish = () => {
   const { token } = useAuth();
   const { theme } = useThemeContext();
   const { categories } = useCategories();
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [image, setImage] = useState<File | null>(null);
+  const { register, getValues, watch } = useForm<PublishFormValues>({
+    defaultValues: {
+      title: "",
+      content: "",
+    },
+  });
+
+  const watchedTitle = watch("title") || "";
+  const watchedContent = watch("content") || "";
+  const watchedImage = watch("image");
+
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [postId, setPostId] = useState<number | null>(null);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    const file = watchedImage?.[0];
+
+    if (!file) {
+      setCoverPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setCoverPreview(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [watchedImage]);
 
   const normalizedCategories = useMemo(() => {
     const fromApi = categories.map((item) => item.name).filter(Boolean);
@@ -61,7 +90,8 @@ const Publish = () => {
     );
   };
 
-  const isValidForSave = title.trim().length > 0 && content.trim().length > 0;
+  const isValidForSave =
+    watchedTitle.trim().length > 0 && watchedContent.trim().length > 0;
 
   const extractError = (err: unknown, fallback: string) => {
     if (isAxiosError(err)) {
@@ -74,25 +104,66 @@ const Publish = () => {
     return fallback;
   };
 
-  const handleCoverUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    setImage(file);
-    setCoverPreview(file ? URL.createObjectURL(file) : null);
-  };
-
-  const createDraft = async () => {
+  const createDraft = async (formValues: PublishFormValues) => {
     if (!token) throw new Error("You must be logged in.");
 
+    const selectedImage = formValues.image?.[0] ?? null;
+
     const createdId = await saveDraftPost(token, {
-      title: title.trim(),
-      content: content.trim(),
-      image,
+      title: formValues.title.trim(),
+      content: formValues.content.trim(),
+      image: selectedImage,
       status: "draft",
     });
 
-    setPostId(createdId);
     return createdId;
   };
+
+  const saveDraftMutation = useMutation({
+    mutationFn: (formValues: PublishFormValues) => createDraft(formValues),
+    onSuccess: (createdId) => {
+      setPostId(createdId);
+      setErrorMessage("");
+      setSuccessMessage("Draft saved successfully.");
+    },
+    onError: (err) => {
+      setSuccessMessage("");
+      setErrorMessage(extractError(err, "Could not save draft."));
+    },
+  });
+
+  const submitPostMutation = useMutation({
+    mutationFn: async (formValues: PublishFormValues) => {
+      if (!token) throw new Error("You must be logged in.");
+
+      if (selectedCategoryIds.length === 0) {
+        throw new Error("Please select at least one category before submitting.");
+      }
+
+      const currentPostId = postId ?? (await createDraft(formValues));
+
+      await Promise.all(
+        selectedCategoryIds.map((categoryId) =>
+          addCategoryToPost(token, currentPostId, categoryId),
+        ),
+      );
+
+      const message = await submitPostReview(token, currentPostId);
+      return { message, currentPostId };
+    },
+    onSuccess: ({ message, currentPostId }) => {
+      setPostId(currentPostId);
+      setErrorMessage("");
+      setSuccessMessage(message);
+    },
+    onError: (err) => {
+      setSuccessMessage("");
+      setErrorMessage(extractError(err, "Could not submit post for review."));
+    },
+  });
+
+  const isSavingDraft = saveDraftMutation.isPending;
+  const isSubmitting = submitPostMutation.isPending;
 
   const handleSaveDraft = async () => {
     if (!isValidForSave) {
@@ -101,18 +172,10 @@ const Publish = () => {
       return;
     }
 
-    setIsSavingDraft(true);
     setErrorMessage("");
     setSuccessMessage("");
 
-    try {
-      await createDraft();
-      setSuccessMessage("Draft saved successfully.");
-    } catch (err) {
-      setErrorMessage(extractError(err, "Could not save draft."));
-    } finally {
-      setIsSavingDraft(false);
-    }
+    saveDraftMutation.mutate(getValues());
   };
 
   const handleSubmitPost = async () => {
@@ -122,33 +185,10 @@ const Publish = () => {
       return;
     }
 
-    setIsSubmitting(true);
     setErrorMessage("");
     setSuccessMessage("");
 
-    try {
-      const currentPostId = postId ?? (await createDraft());
-      if (!token) throw new Error("You must be logged in.");
-
-      if (selectedCategoryIds.length === 0) {
-        throw new Error(
-          "Please select at least one category before submitting.",
-        );
-      }
-
-      await Promise.all(
-        selectedCategoryIds.map((categoryId) =>
-          addCategoryToPost(token, currentPostId, categoryId),
-        ),
-      );
-
-      const message = await submitPostReview(token, currentPostId);
-      setSuccessMessage(message);
-    } catch (err) {
-      setErrorMessage(extractError(err, "Could not submit post for review."));
-    } finally {
-      setIsSubmitting(false);
-    }
+    submitPostMutation.mutate(getValues());
   };
 
   return (
@@ -239,14 +279,13 @@ const Publish = () => {
                 id="cover-upload"
                 type="file"
                 accept="image/*"
-                onChange={handleCoverUpload}
+                {...register("image")}
                 className="hidden"
               />
             </label>
 
             <input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              {...register("title")}
               placeholder="Title your story..."
               className={clsx(
                 "mt-8 w-full text-4xl md:text-6xl font-extrabold bg-transparent outline-none",
@@ -281,8 +320,7 @@ const Publish = () => {
             </div>
 
             <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
+              {...register("content")}
               placeholder="Begin your narrative..."
               rows={12}
               className={clsx(
