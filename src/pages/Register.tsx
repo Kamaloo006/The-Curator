@@ -6,22 +6,35 @@ import clsx from "clsx";
 import { Loader } from "@mantine/core";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface RegisterFormValues {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-  bio: string;
-  avatar: FileList;
-}
+const RegisterFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters long."),
+  email: z.string().email("Please enter a valid email address."),
+  password: z.string().min(8, "Password must be at least 8 characters long."),
+  password_confirmation: z
+    .string()
+    .min(8, "Password confirmation must be at least 8 characters long."),
+  bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional(),
+  avatar: z.instanceof(FileList).refine((files) => {
+    if (files.length === 0) return true; // Avatar is optional
+    const file = files[0];
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    return validTypes.includes(file.type) && file.size <= 5 * 1024 * 1024; // Max 5MB
+  }, "Avatar must be an image file (jpg, png, gif) and less than 5MB."),
+});
+
+type RegisterFormData = z.infer<typeof RegisterFormSchema>;
 
 const Register = () => {
   const auth = useAuth();
   const navigate = useNavigate();
   const { theme } = useThemeContext();
 
-  const { register, handleSubmit } = useForm<RegisterFormValues>();
+  const { register, handleSubmit } = useForm<RegisterFormData>({
+    resolver: zodResolver(RegisterFormSchema),
+  });
   const [errorMessage, setErrorMessage] = useState("");
 
   const registerMutation = useMutation({
@@ -37,7 +50,7 @@ const Register = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
+  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     const formData = new FormData();
 
     formData.append("name", data.name);

@@ -1,13 +1,20 @@
+import z from "zod";
 import { apiClient } from "./client";
 
-interface UserApiPayload {
-  id: number;
-  name: string;
-  role: "user" | "author";
-  bio: string;
-  avatar: string;
-  date: string;
-}
+
+
+const UserApiPayloadSchema = z.object({
+  id:z.number(),
+  name:z.string(),
+  role:z.enum(['user','author']),
+  bio:z.string(),
+  avatar:z.string(),
+  date:z.string(),
+})
+
+type UserApiPayload = z.infer<typeof UserApiPayloadSchema>;
+
+
 
 interface UpdateUserInfoResponse {
   message: string;

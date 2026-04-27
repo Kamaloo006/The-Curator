@@ -1,3 +1,4 @@
+import z from "zod";
 import { apiClient } from "./client";
 
 export interface AdminCategory {
@@ -10,16 +11,22 @@ export interface MutationProps{
   action: "approve" | "reject";
 }
 
-export interface PendingPost {
-  id: number;
-  title: string;
-  content: string;
-  image?: string;
-  status?: string;
-  category?: string | null;
-  author: string;
-  createdAt?: string;
-}
+// Pending Post Schema
+
+const PendingPostSchema = z.object({
+  id:z.number(),
+  title:z.string(),
+  content:z.string(),
+  image:z.string().optional(),
+  status:z.string().optional(),
+  category:z.string().optional(),
+  author:z.string(),
+  createdAt:z.string().optional(),
+})
+
+export type PendingPost = z.infer<typeof PendingPostSchema>;
+
+
 
 interface PendingPostsResponseItem {
   id: number;
@@ -123,7 +130,7 @@ export const getPendingPosts = async (token: string): Promise<PendingPost[]> => 
     authHeader(token),
   );
 
-  return response.data.data.map((post) => ({
+  return response.data.data.map((post) => PendingPostSchema.parse({
     id: post.id,
     title: post.title,
     content: post.content,

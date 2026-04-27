@@ -11,15 +11,47 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface ProfileFormValues {
-  fullName: string;
-  email: string;
-  bio: string;
-  currentPassword: string;
-  newPassword: string;
-  avatar: FileList;
-}
+const ProfileFormSchema = z
+  .object({
+    fullName: z.string().min(2, "Name must be at least 2 characters long."),
+    email: z.string().email("Please enter a valid email address."),
+    bio: z.string().max(500, "Bio cannot exceed 500 characters."),
+    currentPassword: z.string().optional().or(z.literal("")),
+    newPassword: z.string().optional().or(z.literal("")),
+    avatar: z.instanceof(FileList).refine((files) => {
+      if (files.length === 0) return true; // Avatar is optional
+      const file = files[0];
+      const validTypes = ["image/jpeg", "image/png", "image/gif"];
+      return validTypes.includes(file.type) && file.size <= 5 * 1024 * 1024; // Max 5MB
+    }, "Avatar must be an image file (jpg, png, gif) and less than 5MB."),
+  })
+  .superRefine((data, ctx) => {
+    const currentPassword = data.currentPassword ?? "";
+    const newPassword = data.newPassword ?? "";
+
+    if (!currentPassword && !newPassword) return;
+
+    if (currentPassword.length < 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["currentPassword"],
+        message: "Current password must be at least 8 characters long.",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPassword"],
+        message: "New password must be at least 8 characters long.",
+      });
+    }
+  });
+
+type ProfileFormData = z.infer<typeof ProfileFormSchema>;
 
 const defaultBio =
   "Exploring the intersection of architectural Brutalism and modern digital interfaces. Based in London. Dedicated to finding the quiet moments in a loud digital world.";
@@ -33,7 +65,8 @@ const Profile = () => {
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const { register, handleSubmit, reset, watch } = useForm<ProfileFormValues>({
+  const { register, handleSubmit, reset, watch } = useForm<ProfileFormData>({
+    resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
       fullName: user?.name || "Elena Sterling",
       email: user?.email || "e.sterling@curator.com",
@@ -74,7 +107,7 @@ const Profile = () => {
   }, [watchedAvatar]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (formData: ProfileFormValues) => {
+    mutationFn: async (formData: ProfileFormData) => {
       if (!user || !token) {
         throw new Error("You must be logged in to update your profile.");
       }
@@ -146,7 +179,7 @@ const Profile = () => {
     setErrorMessage("");
   };
 
-  const onSubmit: SubmitHandler<ProfileFormValues> = (data) => {
+  const onSubmit: SubmitHandler<ProfileFormData> = (data) => {
     updateProfileMutation.mutate(data);
   };
 

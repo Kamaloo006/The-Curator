@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import type { Post } from "../../types/Post";
+import z from "zod";
 
 interface ApiResponse {
   data: Post[];
@@ -9,19 +10,29 @@ interface SinglePostApiResponse {
   data: Post;
 }
 
-interface CreatePostPayload {
-  title: string;
-  content: string;
-  image?: File | null;
-  status?: "draft" | "pending" | "published" | "archived";
-}
+// Create Post Payload
+const CreatePostPayloadSchema = z.object({
+  title: z.string().min(1, "Title is required."),
+  content: z.string().min(1, "Content is required."),
+  image: z.instanceof(File).optional(),
+  status: z.enum(["draft", "pending", "published", "archived"]).optional(),
+});
 
-interface CreatePostResponse {
-  id?: number;
-  post?: { id?: number };
-  data?: { id?: number };
-  message?: string;
-}
+type CreatePostPayload = z.infer<typeof CreatePostPayloadSchema>;
+
+
+// Post Response Schemas
+
+const CreatePostResponseSchema = z.object({
+  id: z.number().optional(),
+  post: z.object({ id: z.number().optional() }).optional(),
+  data: z.object({ id: z.number().optional() }).optional(),
+  message: z.string().optional(),
+});
+
+type CreatePostResponse = z.infer<typeof CreatePostResponseSchema>;
+
+
 
 interface SubmitReviewResponse {
   message?: string;

@@ -1,12 +1,16 @@
-export interface User{
-    id: number;
-    name: string;
-    email: string;
-    avatar:string;
-    avatar_url?: string | null;
-    bio?: string | null;
-    created_at: string;
-    updated_at: string;
-    password:string;
-    password_confirmation:string;
-}
+import { z } from "zod";
+
+export const UserSchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string(),
+    avatar: z.string(),
+    avatar_url: z.string().nullable().optional(),
+    bio: z.string().nullable().optional(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    password: z.string(),
+    password_confirmation: z.string(),
+});
+
+export type User = z.infer<typeof UserSchema>;

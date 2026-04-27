@@ -22,22 +22,31 @@ import {
   saveDraftPost,
   submitPostReview,
 } from "../services/api/posts";
+import z from "zod";
 
-interface PublishFormValues {
-  title: string;
-  content: string;
-  image: FileList;
-}
+const PublishFormSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  image: z.instanceof(FileList).refine((files) => {
+    if (files.length === 0) return true; // Image is optional,
+    const file = files[0];
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    return validTypes.includes(file.type) && file.size <= 5 * 1024 * 1024; // Max 5MB
+  }, "Image must be an image file (jpg, png, gif) and less than 5MB."),
+});
+
+type PublishFormData = z.infer<typeof PublishFormSchema>;
 
 const Publish = () => {
   const { token } = useAuth();
   const { theme } = useThemeContext();
   const { categories } = useCategories();
 
-  const { register, getValues, watch } = useForm<PublishFormValues>({
+  const { register, getValues, watch } = useForm<PublishFormData>({
     defaultValues: {
       title: "",
       content: "",
+      image: undefined,
     },
   });
 
@@ -104,7 +113,7 @@ const Publish = () => {
     return fallback;
   };
 
-  const createDraft = async (formValues: PublishFormValues) => {
+  const createDraft = async (formValues: PublishFormData) => {
     if (!token) throw new Error("You must be logged in.");
 
     const selectedImage = formValues.image?.[0] ?? null;
@@ -120,7 +129,7 @@ const Publish = () => {
   };
 
   const saveDraftMutation = useMutation({
-    mutationFn: (formValues: PublishFormValues) => createDraft(formValues),
+    mutationFn: (formValues: PublishFormData) => createDraft(formValues),
     onSuccess: (createdId) => {
       setPostId(createdId);
       setErrorMessage("");
@@ -133,11 +142,13 @@ const Publish = () => {
   });
 
   const submitPostMutation = useMutation({
-    mutationFn: async (formValues: PublishFormValues) => {
+    mutationFn: async (formValues: PublishFormData) => {
       if (!token) throw new Error("You must be logged in.");
 
       if (selectedCategoryIds.length === 0) {
-        throw new Error("Please select at least one category before submitting.");
+        throw new Error(
+          "Please select at least one category before submitting.",
+        );
       }
 
       const currentPostId = postId ?? (await createDraft(formValues));

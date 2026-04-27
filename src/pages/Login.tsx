@@ -5,12 +5,16 @@ import { useThemeContext } from "../context/ThemeContext";
 import { Loader } from "@mantine/core";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
 
-interface LoginFormValues {
-  email: string;
-  password: string;
-}
+const LoginFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address."),
+  password: z.string().min(6, "Password must be at least 6 characters long."),
+});
+
+type LoginFormData = z.infer<typeof LoginFormSchema>;
 
 const Login = () => {
   const { login } = useAuth();
@@ -19,17 +23,19 @@ const Login = () => {
 
   const isDark = theme === "dark";
 
-  const { register, handleSubmit } = useForm<LoginFormValues>();
+  const { register, handleSubmit } = useForm<LoginFormData>({
+    resolver: zodResolver(LoginFormSchema),
+  });
 
   const loginMutation = useMutation({
-    mutationFn: (loginData: LoginFormValues) => login(loginData),
+    mutationFn: (loginData: LoginFormData) => login(loginData),
     onSuccess: (result) => {
       const role = result.user?.role;
       navigate(role === "admin" ? "/admin" : "/");
     },
   });
 
-  const onSubmit: SubmitHandler<LoginFormValues> = (data) => {
+  const onSubmit: SubmitHandler<LoginFormData> = (data) => {
     loginMutation.mutate(data);
   };
 
